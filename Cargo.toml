@@ -1,0 +1,10 @@
+[package]
+name = "tally"
+version = "0.1.0"
+edition = "2021"
+description = "Counts lines, words and bytes. A tiny machine tool used to test the runtime-rust-sdlc board."
+
+[dependencies]
+
+[profile.release]
+opt-level = 3

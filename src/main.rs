@@ -20,12 +20,13 @@ fn count(data: &[u8]) -> Counts {
 }
 
 fn usage() -> &'static str {
-    "usage: tally [--json] [--version] [--help] [FILE...]\n\
+    "usage: tally [--json|--lines] [--version] [--help] [FILE...]\n\
      Reads stdin when no FILE is given. Prints lines, words and bytes."
 }
 
 fn main() -> ExitCode {
     let mut json = false;
+    let mut lines_only = false;
     let mut files: Vec<String> = Vec::new();
     for arg in std::env::args().skip(1) {
         match arg.as_str() {
@@ -38,12 +39,18 @@ fn main() -> ExitCode {
                 return ExitCode::SUCCESS;
             }
             "--json" => json = true,
+            "--lines" => lines_only = true,
             a if a.starts_with("--") => {
                 eprintln!("tally: unknown option {a}");
                 return ExitCode::from(2);
             }
             _ => files.push(arg),
         }
+    }
+
+    if json && lines_only {
+        eprintln!("tally: --lines cannot be used with --json");
+        return ExitCode::from(2);
     }
 
     let mut inputs: Vec<(String, Vec<u8>)> = Vec::new();
@@ -68,7 +75,9 @@ fn main() -> ExitCode {
 
     for (name, data) in &inputs {
         let c = count(data);
-        if json {
+        if lines_only {
+            println!("{}", c.lines);
+        } else if json {
             println!(
                 "{{\"file\":\"{}\",\"lines\":{},\"words\":{},\"bytes\":{}}}",
                 name, c.lines, c.words, c.bytes

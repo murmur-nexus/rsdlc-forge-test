@@ -8,6 +8,7 @@ struct Counts {
     lines: usize,
     words: usize,
     bytes: usize,
+    chars: usize,
 }
 
 fn count(data: &[u8]) -> Counts {
@@ -16,6 +17,7 @@ fn count(data: &[u8]) -> Counts {
         lines: data.iter().filter(|b| **b == b'\n').count(),
         words: text.split_whitespace().count(),
         bytes: data.len(),
+        chars: text.chars().count(),
     }
 }
 
@@ -28,6 +30,7 @@ fn main() -> ExitCode {
     let mut json = false;
     let mut lines_only = false;
     let mut words_only = false;
+    let mut chars_only = false;
     let mut files: Vec<String> = Vec::new();
     for arg in std::env::args().skip(1) {
         match arg.as_str() {
@@ -42,6 +45,7 @@ fn main() -> ExitCode {
             "--json" => json = true,
             "--lines" => lines_only = true,
             "--words" => words_only = true,
+            "--chars" => chars_only = true,
             a if a.starts_with("--") => {
                 eprintln!("tally: unknown option {a}");
                 return ExitCode::from(2);
@@ -57,6 +61,11 @@ fn main() -> ExitCode {
 
     if json && words_only {
         eprintln!("tally: --words cannot be used with --json");
+        return ExitCode::from(2);
+    }
+
+    if json && chars_only {
+        eprintln!("tally: --chars cannot be used with --json");
         return ExitCode::from(2);
     }
 
@@ -86,6 +95,8 @@ fn main() -> ExitCode {
             println!("{}", c.lines);
         } else if words_only {
             println!("{}", c.words);
+        } else if chars_only {
+            println!("{}", c.chars);
         } else if json {
             println!(
                 "{{\"file\":\"{}\",\"lines\":{},\"words\":{},\"bytes\":{}}}",
@@ -109,7 +120,8 @@ mod tests {
             Counts {
                 lines: 2,
                 words: 3,
-                bytes: 6
+                bytes: 6,
+                chars: 6
             }
         );
     }
